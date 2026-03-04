@@ -226,6 +226,8 @@ unset($row);
     .app-row:nth-child(1) .rank { color:var(--accent1); }
     .app-row:nth-child(2) .rank { color:var(--accent3); }
     .app-row:nth-child(3) .rank { color:var(--accent2); }
+    .app-row:nth-child(4) .rank { color:#a78bfa; }
+    .app-row:nth-child(5) .rank { color:#facc15; }
     .app-info { display:flex; flex-direction:column; gap:6px; }
     .app-name { font-size:14px; font-weight:500; }
     .app-meta { font-size:10px; color:var(--muted); }

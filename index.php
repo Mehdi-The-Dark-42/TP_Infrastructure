@@ -5,7 +5,7 @@
 // ============================================================
 $host   = 'localhost';
 $dbname = 'campus_it';
-$user   = 'root';
+$user   = 'admin';
 $pass   = 'Hub-78-';
 
 $pdo = null;

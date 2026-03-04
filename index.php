@@ -56,7 +56,7 @@ try {
             ('Gestion Absences');");
         $pdo->exec("INSERT INTO ressource (nom) VALUES ('Stockage'),('Réseau');");
         // sample consommation for months through Feb 2026
-        $pdo->exec("INSERT INTO consommation (app_id,res_id,mois,volume) VALUES
+        $pdo->exec("INSERT INTO consommation (app_id,res_id,mois,volume) SELECT
           (1,1,'2025-01-01',1000),(1,2,'2025-01-01',1200),
           (1,1,'2025-02-01',1050),(1,2,'2025-02-01',1250),
           (1,1,'2025-03-01',1100),(1,2,'2025-03-01',1300),

@@ -56,7 +56,7 @@ try {
             ('Gestion Absences');");
         $pdo->exec("INSERT INTO ressource (nom) VALUES ('Stockage'),('Réseau');");
         // sample consommation for months through Feb 2026
-        $pdo->exec("INSERT INTO consommation (app_id,res_id,mois,volume) SELECT
+        $pdo->exec("INSERT INTO consommation (app_id,res_id,mois,volume) VALUES
           (1,1,'2025-01-01',1000),(1,2,'2025-01-01',1200),
           (1,1,'2025-02-01',1050),(1,2,'2025-02-01',1250),
           (1,1,'2025-03-01',1100),(1,2,'2025-03-01',1300),
@@ -150,15 +150,15 @@ $top5    = $pdo->query($sql_top5)->fetchAll(PDO::FETCH_ASSOC);
 $max_vol = !empty($top5) ? $top5[0]['total_volume'] : 1;
 
 // ============================================================
-//  REQUÊTE 2 — Évolution mensuelle jan–juin 2025
+//  REQUÊTE 2 — Évolution mensuelle (2025-01 → 2026-02)
 //  Table  : consommation
-//  Filtre : mois BETWEEN '2025-01-01' AND '2025-06-01'
+//  Filtre : mois BETWEEN '2025-01-01' AND '2026-02-01'
 // ============================================================
 $sql_evo = "
     SELECT   mois                           AS mois_raw,
              ROUND(SUM(volume), 2)          AS total_volume
     FROM     consommation
-    WHERE    mois BETWEEN '2025-01-01' AND '2025-06-01'
+    WHERE    mois BETWEEN '2025-01-01' AND '2026-02-01'
     GROUP BY mois
     ORDER BY mois ASC
 ";
@@ -383,20 +383,17 @@ unset($row);
   <div class="section-title">Évolution mensuelle — Consommation totale campus</div>
   <div class="section-sub">
     Table <code>consommation</code> ·
-    Filtre <code>WHERE mois BETWEEN '2025-01-01' AND '2025-06-01'</code> ·
+    Filtre <code>WHERE mois BETWEEN '2025-01-01' AND '2026-02-01'</code> ·
     Variation calculée en PHP
   </div>
 
   <div class="sql-label">↳ Requête SQL exécutée sur campus_it</div>
-  <pre class="sql-block"><span class="cm">-- Agrégation mensuelle, filtrée sur jan–juin 2025</span>
+  <pre class="sql-block"><span class="cm">-- Agrégation mensuelle, de 2025-01 à 2026-02</span>
 <span class="cm">-- Toutes applications et toutes ressources confondues</span>
-<span class="kw">SELECT</span>   mois,
-         <span class="fn">DATE_FORMAT</span>(mois, <span class="str">'%M %Y'</span>)   <span class="kw">AS</span> mois_label,
+<span class="kw">SELECT</span>   mois <span class="kw">AS</span> mois_raw,
          <span class="fn">ROUND</span>(<span class="fn">SUM</span>(volume), 2)        <span class="kw">AS</span> total_volume
 <span class="kw">FROM</span>     consommation
-<span class="kw">WHERE</span>    mois <span class="kw">BETWEEN</span> <span class="str">'2025-01-01'</span> <span class="kw">AND</span> <span class="str">'2025-06-01'</span>
-<span class="kw">GROUP BY</span> mois
-<span class="kw">ORDER BY</span> mois <span class="kw">ASC</span></pre>
+<span class="kw">WHERE</span>    mois <span class="kw">BETWEEN</span> <span class="str">'2025-01-01'</span> <span class="kw">AND</span> <span class="str">'2026-02-01'</span>
 
   <?php if (empty($evolution)): ?>
     <p class="empty">Aucune donnée retournée par la requête.</p>
@@ -451,8 +448,7 @@ unset($row);
   <div class="sql-label">↳ Requête SQL exécutée sur campus_it</div>
   <pre class="sql-block"><span class="cm">-- Jointure consommation ↔ ressource via res_id</span>
 <span class="cm">-- Pivot : une colonne Stockage et une colonne Réseau par mois</span>
-<span class="kw">SELECT</span>   c.mois,
-         <span class="fn">DATE_FORMAT</span>(c.mois, <span class="str">'%M %Y'</span>)                                           <span class="kw">AS</span> mois_label,
+<span class="kw">SELECT</span>   c.mois <span class="kw">AS</span> mois_raw,
          <span class="fn">ROUND</span>(<span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> r.nom = <span class="str">'Stockage'</span> <span class="kw">THEN</span> c.volume <span class="kw">ELSE</span> 0 <span class="kw">END</span>), 2)   <span class="kw">AS</span> stockage,
          <span class="fn">ROUND</span>(<span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> r.nom = <span class="str">'Réseau'</span>   <span class="kw">THEN</span> c.volume <span class="kw">ELSE</span> 0 <span class="kw">END</span>), 2)   <span class="kw">AS</span> reseau
 <span class="kw">FROM</span>     consommation c

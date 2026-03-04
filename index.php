@@ -6,7 +6,7 @@
 $host   = 'localhost';
 $dbname = 'campus_it';
 $user   = 'root';
-$pass   = '';
+$pass   = 'Hub-78-';
 
 $pdo = null;
 // try MySQL first, otherwise fall back to file-based SQLite

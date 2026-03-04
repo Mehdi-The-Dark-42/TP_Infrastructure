@@ -329,23 +329,13 @@ unset($row);
            GROUP BY app_id → SUM(volume) → LIMIT 5
 ════════════════════════════════════════════════════ -->
 <div id="tab1" class="tab-content active">
-  <div class="section-title">Top 6 — Applications les plus consommatrices</div>
+  <div class="section-title">Top 5 — Applications les plus consommatrices</div>
   <div class="section-sub">
     Jointure <code>consommation</code> ↔ <code>application</code> ·
     <code>SUM(volume)</code> toutes ressources · tous mois
   </div>
 
-  <div class="sql-label">↳ Requête SQL exécutée sur campus_it</div>
-  <pre class="sql-block"><span class="cm">-- Jointure consommation ↔ application via app_id</span>
-<span class="cm">-- Somme de tous les volumes par application, toutes ressources et mois confondus</span>
-<span class="kw">SELECT</span>   a.nom                      <span class="kw">AS</span> nom_app,
-         <span class="fn">ROUND</span>(<span class="fn">SUM</span>(c.volume), 2)    <span class="kw">AS</span> total_volume,
-         <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> c.mois)     <span class="kw">AS</span> nb_mois
-<span class="kw">FROM</span>     consommation c
-<span class="kw">JOIN</span>     application  a  <span class="kw">ON</span>  a.app_id = c.app_id
-<span class="kw">GROUP BY</span> a.app_id, a.nom
-<span class="kw">ORDER BY</span> total_volume <span class="kw">DESC</span>
-<span class="kw">LIMIT</span>    5</pre>
+
 
   <?php if (empty($top5)): ?>
     <p class="empty">Aucune donnée retournée par la requête.</p>
@@ -387,13 +377,6 @@ unset($row);
     Variation calculée en PHP
   </div>
 
-  <div class="sql-label">↳ Requête SQL exécutée sur campus_it</div>
-  <pre class="sql-block"><span class="cm">-- Agrégation mensuelle, de 2025-01 à 2026-02</span>
-<span class="cm">-- Toutes applications et toutes ressources confondues</span>
-<span class="kw">SELECT</span>   mois <span class="kw">AS</span> mois_raw,
-         <span class="fn">ROUND</span>(<span class="fn">SUM</span>(volume), 2)        <span class="kw">AS</span> total_volume
-<span class="kw">FROM</span>     consommation
-<span class="kw">WHERE</span>    mois <span class="kw">BETWEEN</span> <span class="str">'2025-01-01'</span> <span class="kw">AND</span> <span class="str">'2026-02-01'</span>
 
   <?php if (empty($evolution)): ?>
     <p class="empty">Aucune donnée retournée par la requête.</p>
@@ -445,16 +428,6 @@ unset($row);
     Pivot conditionnel <code>CASE WHEN r.nom = '...'</code> · tous mois disponibles
   </div>
 
-  <div class="sql-label">↳ Requête SQL exécutée sur campus_it</div>
-  <pre class="sql-block"><span class="cm">-- Jointure consommation ↔ ressource via res_id</span>
-<span class="cm">-- Pivot : une colonne Stockage et une colonne Réseau par mois</span>
-<span class="kw">SELECT</span>   c.mois <span class="kw">AS</span> mois_raw,
-         <span class="fn">ROUND</span>(<span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> r.nom = <span class="str">'Stockage'</span> <span class="kw">THEN</span> c.volume <span class="kw">ELSE</span> 0 <span class="kw">END</span>), 2)   <span class="kw">AS</span> stockage,
-         <span class="fn">ROUND</span>(<span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> r.nom = <span class="str">'Réseau'</span>   <span class="kw">THEN</span> c.volume <span class="kw">ELSE</span> 0 <span class="kw">END</span>), 2)   <span class="kw">AS</span> reseau
-<span class="kw">FROM</span>     consommation c
-<span class="kw">JOIN</span>     ressource    r  <span class="kw">ON</span>  r.res_id = c.res_id
-<span class="kw">GROUP BY</span> c.mois
-<span class="kw">ORDER BY</span> c.mois <span class="kw">ASC</span></pre>
 
   <div class="legend">
     <span><span class="legend-dot" style="background:var(--accent1)"></span>Stockage (Go)</span>

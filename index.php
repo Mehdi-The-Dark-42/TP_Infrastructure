@@ -329,7 +329,7 @@ unset($row);
            GROUP BY app_id → SUM(volume) → LIMIT 5
 ════════════════════════════════════════════════════ -->
 <div id="tab1" class="tab-content active">
-  <div class="section-title">Top 6 — Applications les plus consommatrices</div>
+  <div class="section-title">Top 5 — Applications les plus consommatrices</div>
   <div class="section-sub">
     Jointure <code>consommation</code> ↔ <code>application</code> ·
     <code>SUM(volume)</code> toutes ressources · tous mois

@@ -8,6 +8,8 @@ $dbname = 'campus_it';
 $user   = 'root';
 $pass   = '';
 
+$pdo = null;
+// try MySQL first, otherwise fall back to file-based SQLite
 try {
     $pdo = new PDO(
         "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -15,10 +17,49 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 } catch (PDOException $e) {
-    die('<div style="font-family:monospace;padding:40px;color:#ff6b35">
-        <strong>Connexion échouée :</strong> ' . htmlspecialchars($e->getMessage()) . '
-        <br><br>Vérifiez les paramètres de connexion en haut du fichier index.php
-    </div>');
+    // fallback
+    $sqliteFile = __DIR__ . '/campus_it.sqlite';
+    $pdo = new PDO('sqlite:' . $sqliteFile);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // ensure schema exists
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS application (
+            app_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT NOT NULL
+        );"
+    );
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS ressource (
+            res_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT NOT NULL
+        );"
+    );
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS consommation (
+            cons_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            app_id INTEGER,
+            res_id INTEGER,
+            mois TEXT,
+            volume REAL
+        );"
+    );
+
+    // seed minimal data if empty
+    $cnt = $pdo->query('SELECT COUNT(*) FROM application')->fetchColumn();
+    if ($cnt == 0) {
+        $pdo->exec("INSERT INTO application (nom) VALUES
+            ('Portail Étudiant'),
+            ('Messagerie'),
+            ('Parc Informatique'),
+            ('Intranet'),
+            ('Gestion Absences');");
+        $pdo->exec("INSERT INTO ressource (nom) VALUES ('Stockage'),('Réseau');");
+        // sample consommation for a few months
+        $pdo->exec("INSERT INTO consommation (app_id,res_id,mois,volume) VALUES
+            (1,1,'2025-01-01',1000),(1,2,'2025-01-01',1200),
+            (2,1,'2025-02-01',900),(2,2,'2025-02-01',1100);");
+    }
 }
 
 // ============================================================
@@ -47,7 +88,6 @@ $max_vol = !empty($top5) ? $top5[0]['total_volume'] : 1;
 // ============================================================
 $sql_evo = "
     SELECT   mois                           AS mois_raw,
-             DATE_FORMAT(mois, '%M %Y')     AS mois_label,
              ROUND(SUM(volume), 2)          AS total_volume
     FROM     consommation
     WHERE    mois BETWEEN '2025-01-01' AND '2025-06-01'
@@ -55,9 +95,15 @@ $sql_evo = "
     ORDER BY mois ASC
 ";
 $evolution = $pdo->query($sql_evo)->fetchAll(PDO::FETCH_ASSOC);
+// generate labels for any driver
+foreach ($evolution as &$row) {
+    $date = strtotime($row['mois_raw']);
+    $row['mois_label'] = $date ? strftime('%B %Y', $date) : $row['mois_raw'];
+}
+unset($row);
 $max_evo   = !empty($evolution) ? max(array_column($evolution, 'total_volume')) : 1;
 
-// Calcul de la variation mois/mois en PHP (pas de LAG() en MySQL 5.7)
+// Calcul de la variation mois/mois en PHP (pas de LAG() en MySQL 5.7 ou SQLite)
 foreach ($evolution as $i => &$row) {
     $row['variation'] = ($i === 0)
         ? null
@@ -74,7 +120,6 @@ unset($row);
 // ============================================================
 $sql_comp = "
     SELECT   c.mois                                                                AS mois_raw,
-             DATE_FORMAT(c.mois, '%M %Y')                                          AS mois_label,
              ROUND(SUM(CASE WHEN r.nom = 'Stockage' THEN c.volume ELSE 0 END), 2)  AS stockage,
              ROUND(SUM(CASE WHEN r.nom = 'Réseau'   THEN c.volume ELSE 0 END), 2)  AS reseau
     FROM     consommation c
@@ -83,6 +128,12 @@ $sql_comp = "
     ORDER BY c.mois ASC
 ";
 $comparaison = $pdo->query($sql_comp)->fetchAll(PDO::FETCH_ASSOC);
+// add labels
+foreach ($comparaison as &$row) {
+    $date = strtotime($row['mois_raw']);
+    $row['mois_label'] = $date ? strftime('%B %Y', $date) : $row['mois_raw'];
+}
+unset($row);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
